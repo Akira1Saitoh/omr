@@ -59,8 +59,9 @@ extern TR::Instruction *loadConstant32(TR::CodeGenerator *cg, TR::Node *node, in
  * @param[in] value : integer value
  * @param[in] trgReg : target register
  * @param[in] cursor : instruction cursor
+ * @param[in] isPicSite : true if this is pic site
  */
-extern TR::Instruction *loadConstant64(TR::CodeGenerator *cg, TR::Node *node, int64_t value, TR::Register *trgReg, TR::Instruction *cursor = NULL);
+extern TR::Instruction *loadConstant64(TR::CodeGenerator *cg, TR::Node *node, int64_t value, TR::Register *trgReg, TR::Instruction *cursor = NULL, bool isPicSite=false);
 
 extern TR::Instruction *loadAddressConstant(TR::CodeGenerator *cg, TR::Node *node, intptr_t value, TR::Register *trgReg, TR::Instruction *cursor=NULL, bool isPicSite=false, int16_t typeAddress=-1);
 
@@ -75,6 +76,18 @@ extern TR::Instruction *loadAddressConstant(TR::CodeGenerator *cg, TR::Node *nod
  * @return generated instruction
  */
 extern TR::Instruction *loadAddressConstantInSnippet(TR::CodeGenerator *cg, TR::Node *node, intptrj_t address, TR::Register *trgReg, TR_ExternalRelocationTargetKind reloKind, TR::Instruction *cursor=NULL);
+
+/**
+ * @brief Generates instruction for loading address constant to register using constant data snippet
+ * @param[in] cg : CodeGenerator
+ * @param[in] node: node
+ * @param[in] address : address
+ * @param[in] trgReg : target register
+ * @param[in] isClassUnloadingPICSite : true if address is class unloading pic site
+ * @param[in] cursor : instruction cursor
+ * @return generated instruction
+ */
+extern TR::Instruction *loadAddressConstantInSnippet(TR::CodeGenerator *cg, TR::Node *node, intptrj_t address, TR::Register *trgReg, bool isClassUnloadingPICSite, TR::Instruction *cursor=NULL);
 
 
 namespace OMR

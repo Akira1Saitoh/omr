@@ -46,6 +46,28 @@ TR::Instruction *loadAddressConstantInSnippet(TR::CodeGenerator *cg, TR::Node *n
    return generateTrg1ImmSymInstruction(cg, TR::InstOpCode::ldrx, node, targetRegister, 0, labelSym, cursor);
    }
 
+TR::Instruction *loadAddressConstantInSnippet(TR::CodeGenerator *cg, TR::Node *node, intptrj_t address, TR::Register *targetRegister, bool isClassUnloadingPICSite, TR::Instruction *cursor)
+   {
+   // We use LDR literal to load a value from the snippet. Offset to PC will be patched by LabelRelative24BitRelocation
+   auto snippet = cg->findOrCreate8ByteConstant(node, address);
+   auto labelSym = snippet->getSnippetLabel();
+   TR::Compilation *comp = cg->comp();
+
+   comp->getSnippetsToBePatchedOnClassRedefinition()->push_front(snippet);
+   if (isClassUnloadingPICSite)
+      {
+      if (node->isClassPointerConstant())
+         {
+         comp->getSnippetsToBePatchedOnClassUnload()->push_front(snippet);
+         }
+      else
+         {
+         comp->getMethodSnippetsToBePatchedOnClassUnload()->push_front(snippet);
+         }
+      }
+   return generateTrg1ImmSymInstruction(cg, TR::InstOpCode::ldrx, node, targetRegister, 0, labelSym, cursor);
+   }
+
 TR::Instruction *loadConstant32(TR::CodeGenerator *cg, TR::Node *node, int32_t value, TR::Register *trgReg, TR::Instruction *cursor)
    {
    TR::Instruction *insertingInstructions = cursor;
@@ -95,8 +117,9 @@ TR::Instruction *loadConstant32(TR::CodeGenerator *cg, TR::Node *node, int32_t v
    return cursor;
    }
 
-TR::Instruction *loadConstant64(TR::CodeGenerator *cg, TR::Node *node, int64_t value, TR::Register *trgReg, TR::Instruction *cursor)
+TR::Instruction *loadConstant64(TR::CodeGenerator *cg, TR::Node *node, int64_t value, TR::Register *trgReg, TR::Instruction *cursor, bool isPicSite)
    {
+   TR::Compilation *comp = cg->comp();
    TR::Instruction *insertingInstructions = cursor;
    if (cursor == NULL)
       cursor = cg->getAppendInstruction();
@@ -179,6 +202,18 @@ TR::Instruction *loadConstant64(TR::CodeGenerator *cg, TR::Node *node, int64_t v
 
    if (!insertingInstructions)
       cg->setAppendInstruction(cursor);
+
+   if (isPicSite)
+      {
+      if (node->isClassPointerConstant())
+         {
+         comp->getStaticPICSites()->push_front(cursor);
+         }
+         else
+         {
+         comp->getStaticMethodPICSites()->push_front(cursor);
+         }
+      }
 
    return cursor;
    }

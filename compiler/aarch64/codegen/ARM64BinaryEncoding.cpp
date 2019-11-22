@@ -29,6 +29,7 @@
 #include "codegen/InstructionDelegate.hpp"
 #include "codegen/Linkage.hpp"
 #include "codegen/Relocation.hpp"
+#include "il/Node_inlines.hpp"
 #include "runtime/CodeCacheManager.hpp"
 
 uint8_t *OMR::ARM64::Instruction::generateBinaryEncoding()
@@ -340,6 +341,23 @@ uint8_t *TR::ARM64Trg1CondInstruction::generateBinaryEncoding()
    return cursor;
    }
 
+void TR::ARM64Trg1ImmInstruction::addMetaDataForCodeAddress(uint8_t *cursor)
+   {
+   TR::Compilation *comp = cg()->comp();
+
+   if (std::find(comp->getStaticPICSites()->begin(), comp->getStaticPICSites()->end(), this) != comp->getStaticPICSites()->end())
+      {
+      TR::Node *node = getNode();
+      cg()->jitAdd32BitPicToPatchOnClassUnload(reinterpret_cast<void *>(node->getAddress()), static_cast<void *>(cursor));
+      }
+
+   if (std::find(comp->getStaticMethodPICSites()->begin(), comp->getStaticMethodPICSites()->end(), this) != comp->getStaticMethodPICSites()->end())
+      {
+      TR::Node *node = getNode();
+      auto classPointer = cg()->fe()->createResolvedMethod(cg()->trMemory(), reinterpret_cast<TR_OpaqueMethodBlock *>(node->getAddress()), comp->getCurrentMethod())->classOfMethod();
+      cg()->jitAdd32BitPicToPatchOnClassUnload(static_cast<void *>(classPointer), static_cast<void *>(cursor));
+      }
+   }
 uint8_t *TR::ARM64Trg1ImmInstruction::generateBinaryEncoding()
    {
    uint8_t *instructionStart = cg()->getBinaryBufferCursor();
@@ -347,6 +365,7 @@ uint8_t *TR::ARM64Trg1ImmInstruction::generateBinaryEncoding()
    cursor = getOpCode().copyBinaryToBuffer(instructionStart);
    insertTargetRegister(toARM64Cursor(cursor));
    insertImmediateField(toARM64Cursor(cursor));
+   addMetaDataForCodeAddress(cursor);
    cursor += ARM64_INSTRUCTION_LENGTH;
    setBinaryLength(ARM64_INSTRUCTION_LENGTH);
    setBinaryEncoding(instructionStart);

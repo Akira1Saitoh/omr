@@ -1160,6 +1160,12 @@ class ARM64Trg1ImmInstruction : public ARM64Trg1Instruction
       }
 
    /**
+    * @brief Adds meta data for code address
+    * @param[in] cursor : instruction cursor
+    */
+   void addMetaDataForCodeAddress(uint8_t *cursor);
+
+   /**
     * @brief Generates binary encoding of the instruction
     * @return instruction cursor
     */

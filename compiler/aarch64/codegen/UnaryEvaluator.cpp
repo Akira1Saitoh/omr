@@ -76,8 +76,30 @@ TR::Register *OMR::ARM64::TreeEvaluator::aconstEvaluator(TR::Node *node, TR::Cod
       return trgReg;
       }
 
+   TR::Compilation *comp = cg->comp();
+   uintptrj_t value = node->getAddress();
+   TR_ResolvedMethod * method = comp->getCurrentMethod();
+   bool isClassUnloadingPICSite = node->isClassPointerConstant() && cg->fe()->isUnloadAssumptionRequired(reinterpret_cast<TR_OpaqueClassBlock *>(value), method);
+   if (!isClassUnloadingPICSite)
+      isClassUnloadingPICSite = node->isMethodPointerConstant() && cg->fe()->isUnloadAssumptionRequired(cg->fe()->createResolvedMethod(cg->trMemory(), reinterpret_cast<TR_OpaqueMethodBlock *>(value), method)->classOfMethod(), method);
+   TR::Symbol *symbol = NULL;
+
+   if (node && node->getOpCode().hasSymbolReference())
+      {
+      symbol = node->getSymbol();
+      }
+   bool isPICCandidate = symbol ? symbol->isStatic() && symbol->isClassObject() : false;
+   if (isPICCandidate && !cg->comp()->compileRelocatableCode()
+      && cg->wantToPatchClassPointer(reinterpret_cast<TR_OpaqueClassBlock*>(value), node))
+      {
+      TR::Register *trgReg = node->setRegister(cg->allocateRegister());
+      loadAddressConstantInSnippet(cg, node, node->getAddress(), trgReg, isClassUnloadingPICSite);
+
+      return trgReg;
+      }
+
    TR::Register *tempReg = node->setRegister(cg->allocateRegister());
-   loadConstant64(cg, node, node->getAddress(), tempReg, NULL);
+   loadConstant64(cg, node, value, tempReg, NULL, isClassUnloadingPICSite);
    return tempReg;
    }
 
