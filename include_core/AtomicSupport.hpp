@@ -295,11 +295,11 @@ public:
 	VMINLINE static void
 	monitorEnterBarrier()
 	{
-#if defined(AIXPPC) || defined(LINUXPPC)
+#if defined(AIXPPC) || defined(LINUXPPC) || defined(AARCH64)
 		readWriteBarrier();
-#else /* defined(AIXPPC) || defined(LINUXPPC) */
+#else /* defined(AIXPPC) || defined(LINUXPPC) || defined(AARCH64) */
 		readBarrier();
-#endif /* defined(AIXPPC) || defined(LINUXPPC) */
+#endif /* defined(AIXPPC) || defined(LINUXPPC) || defined(AARCH64) */
 	}
 
 	/**
