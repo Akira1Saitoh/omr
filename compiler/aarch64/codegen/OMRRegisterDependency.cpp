@@ -224,11 +224,11 @@ void OMR::ARM64::RegisterDependencyConditions::bookKeepingRegisterUses(TR::Instr
    {
    for (int i = 0; i < _addCursorForPre; i++)
       {
-      instr->useRegister(_preConditions->getRegisterDependency(i)->getRegister());
+      instr->useRegister(_preConditions->getRegisterDependency(i)->getRegister(), true);
       }
    for (int j = 0; j < _addCursorForPost; j++)
       {
-      instr->useRegister(_postConditions->getRegisterDependency(j)->getRegister());
+      instr->useRegister(_postConditions->getRegisterDependency(j)->getRegister(), true);
       }
    }
 
@@ -275,6 +275,14 @@ OMR::ARM64::RegisterDependencyConditions::clone(
       }
 
    return result;
+   }
+
+void OMR::ARM64::RegisterDependencyConditions::stopUsingDepRegs(TR::CodeGenerator *cg, TR::Register *returnRegister)
+   {
+   if (_preConditions != NULL)
+      _preConditions->stopUsingDepRegs(getAddCursorForPre(), returnRegister, cg);
+   if (_postConditions != NULL)
+      _postConditions->stopUsingDepRegs(getAddCursorForPost(), returnRegister, cg);
    }
 
 void TR_ARM64RegisterDependencyGroup::assignRegisters(
