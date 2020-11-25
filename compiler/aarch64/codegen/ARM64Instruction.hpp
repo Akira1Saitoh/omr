@@ -29,6 +29,7 @@
 #include "codegen/ARM64ShiftCode.hpp"
 #include "codegen/CodeGenerator.hpp"
 #include "codegen/Instruction.hpp"
+#include "codegen/InstructionDelegate.hpp"
 #include "codegen/MemoryReference.hpp"
 #include "codegen/RegisterDependency.hpp"
 #include "codegen/UnresolvedDataSnippet.hpp"
@@ -2809,6 +2810,7 @@ class ARM64Trg1MemInstruction : public ARM64Trg1Instruction
       : ARM64Trg1Instruction(op, node, treg, cg), _memoryReference(mr)
       {
       mr->bookKeepingRegisterUses(self(), cg);
+      TR::InstructionDelegate::setupImplicitNullPointerException(cg, this);
       }
 
    /*
@@ -2828,6 +2830,7 @@ class ARM64Trg1MemInstruction : public ARM64Trg1Instruction
       : ARM64Trg1Instruction(op, node, treg, precedingInstruction, cg), _memoryReference(mr)
       {
       mr->bookKeepingRegisterUses(self(), cg);
+      TR::InstructionDelegate::setupImplicitNullPointerException(cg, this);
       }
 
    /**
@@ -2932,6 +2935,7 @@ class ARM64MemInstruction : public TR::Instruction
       : TR::Instruction(op, node, cg), _memoryReference(mr)
       {
       mr->bookKeepingRegisterUses(self(), cg);
+      TR::InstructionDelegate::setupImplicitNullPointerException(cg, this);
       }
 
    /*
@@ -2949,6 +2953,7 @@ class ARM64MemInstruction : public TR::Instruction
       : TR::Instruction(op, node, precedingInstruction, cg), _memoryReference(mr)
       {
       mr->bookKeepingRegisterUses(self(), cg);
+      TR::InstructionDelegate::setupImplicitNullPointerException(cg, this);
       }
 
    /**
