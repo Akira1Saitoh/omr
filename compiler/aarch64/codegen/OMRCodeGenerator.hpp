@@ -311,6 +311,17 @@ public:
    void setIsOutOfLineHotPath(bool v) { _flags.set(IsOutOfLineHotPath, v);}
 
    /**
+    * @brief Status of CanExceptByTrap flag
+    * @return CanExceptByTrap flag
+    */
+   bool canExceptByTrap() { return _flags.testAny(CanExceptByTrap);}
+   /**
+    * @brief Sets CanExceptByTrap flag
+    * @param[in] v : CanExceptByTrap flag
+    */
+   void setCanExceptByTrap(bool v) { _flags.set(CanExceptByTrap, v);}
+
+   /**
     * @brief Returns the list of registers which is assigned first time in OOL cold path
     *
     * @return the list of registers which is assigned first time in OOL cold path
@@ -508,6 +519,7 @@ public:
    enum // flags
       {
       IsOutOfLineHotPath    = 0x00000200,
+      CanExceptByTrap       = 0x00000400,
       DummyLastFlag
       };
 
