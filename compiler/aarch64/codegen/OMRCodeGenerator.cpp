@@ -455,7 +455,32 @@ TR::Register *OMR::ARM64::CodeGenerator::gprClobberEvaluate(TR::Node *node)
    if (node->getReferenceCount() > 1)
       {
       TR::Register *targetReg = self()->allocateRegister();
-      generateMovInstruction(self(), node, targetReg, self()->evaluate(node));
+      TR::Register *sourceReg = self()->evaluate(node);
+      auto comp = self()->comp();
+
+      generateMovInstruction(self(), node, targetReg, sourceReg);
+
+      if (sourceReg->containsCollectedReference())
+         {
+         if (comp->getOption(TR_TraceCG))
+            traceMsg(
+               comp,
+               "Setting containsCollectedReference on register %s\n",
+               self()->getDebug()->getName(targetReg));
+         targetReg->setContainsCollectedReference();
+         }
+      if (sourceReg->containsInternalPointer())
+         {
+         TR::AutomaticSymbol *pinningArrayPointer = sourceReg->getPinningArrayPointer();
+         if (comp->getOption(TR_TraceCG))
+            traceMsg(
+               comp,
+               "Setting containsInternalPointer on register %s and setting pinningArrayPointer to " POINTER_PRINTF_FORMAT "\n",
+               self()->getDebug()->getName(targetReg),
+               pinningArrayPointer);
+         targetReg->setContainsInternalPointer();
+         targetReg->setPinningArrayPointer(pinningArrayPointer);
+         }
       return targetReg;
       }
    else
