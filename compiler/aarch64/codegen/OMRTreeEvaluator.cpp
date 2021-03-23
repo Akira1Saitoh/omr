@@ -369,12 +369,24 @@ loadAddressConstantRelocatable(TR::CodeGenerator *cg, TR::Node *node, intptr_t v
 TR::Instruction *
 loadAddressConstant(TR::CodeGenerator *cg, TR::Node *node, intptr_t value, TR::Register *trgReg, TR::Instruction *cursor, bool isPicSite, int16_t typeAddress)
    {
-   if (cg->comp()->compileRelocatableCode())
+   TR::Compilation *comp = cg->comp();
+
+   if (comp->compileRelocatableCode())
       {
       return loadAddressConstantRelocatable(cg, node, value, trgReg, cursor, typeAddress);
       }
 
-   return loadConstant64(cg, node, value, trgReg, cursor);
+   cursor = loadConstant64(cg, node, value, trgReg, cursor);
+   if (isPicSite)
+      {
+      // If the node is a call then value must be a class pointer (interpreter profiling devirtualization)
+      if (node->getOpCode().isCall() || node->isClassPointerConstant())
+         comp->getStaticPICSites()->push_front(cursor);
+      else if (node->isMethodPointerConstant())
+         comp->getStaticMethodPICSites()->push_front(cursor);
+      }
+
+   return cursor;
    }
 
 TR::Register *

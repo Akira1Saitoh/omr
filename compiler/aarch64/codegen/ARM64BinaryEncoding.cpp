@@ -29,6 +29,7 @@
 #include "codegen/InstructionDelegate.hpp"
 #include "codegen/Linkage.hpp"
 #include "codegen/Relocation.hpp"
+#include "il/Node_inlines.hpp"
 #include "il/StaticSymbol.hpp"
 #include "runtime/CodeCacheManager.hpp"
 
@@ -429,6 +430,21 @@ uint8_t *TR::ARM64Trg1ImmInstruction::generateBinaryEncoding()
    cursor = getOpCode().copyBinaryToBuffer(instructionStart);
    insertTargetRegister(toARM64Cursor(cursor));
    insertImmediateField(toARM64Cursor(cursor));
+
+   TR::Compilation *comp = cg()->comp();
+   TR::Node *node = getNode();
+   if (std::find(comp->getStaticPICSites()->begin(), comp->getStaticPICSites()->end(), this) != comp->getStaticPICSites()->end())
+      {
+      // register the instruction as 32bit pic
+      cg()->jitAdd32BitPicToPatchOnClassUnload(reinterpret_cast<void *>(node->getLongInt()), reinterpret_cast<void *>(cursor));
+      }
+   if (std::find(comp->getStaticMethodPICSites()->begin(), comp->getStaticMethodPICSites()->end(), this) != comp->getStaticMethodPICSites()->end())
+      {
+      // register the instruction as 32bit pic
+      auto unloadableClass = cg()->fe()->createResolvedMethod(cg()->trMemory(), reinterpret_cast<TR_OpaqueMethodBlock *>(node->getLongInt()), comp->getCurrentMethod())->classOfMethod();
+      cg()->jitAdd32BitPicToPatchOnClassUnload(reinterpret_cast<void *>(unloadableClass), reinterpret_cast<void *>(cursor));
+      }
+ 
    cursor += ARM64_INSTRUCTION_LENGTH;
    setBinaryLength(ARM64_INSTRUCTION_LENGTH);
    setBinaryEncoding(instructionStart);
