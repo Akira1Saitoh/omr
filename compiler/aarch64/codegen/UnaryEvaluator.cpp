@@ -78,7 +78,13 @@ TR::Register *OMR::ARM64::TreeEvaluator::aconstEvaluator(TR::Node *node, TR::Cod
                         cg->fe()->createResolvedMethod(cg->trMemory(), reinterpret_cast<TR_OpaqueMethodBlock *>(node->getAddress()), method)->classOfMethod(), method));
 
    static bool useInstructionSequence = feGetEnv("TR_aarch64UseInstSeqForUPIC") != NULL;
-
+   static bool exerciseCDS = feGetEnv("TR_aarch64exerciseCDS") != NULL;
+   if (exerciseCDS)
+      {
+      TR::Register *trgReg = node->setRegister(cg->allocateRegister());
+      loadAddressConstantInSnippet(cg, node, node->getAddress(), trgReg, TR_NoRelocation, isPicSite);
+      return trgReg;
+      }
    if (isPicSite)
       {
       TR::Register *trgReg = node->setRegister(cg->allocateRegister());
