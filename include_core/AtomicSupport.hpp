@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2020 IBM Corp. and others
+ * Copyright (c) 1991, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -576,15 +576,11 @@ public:
 	VMINLINE static uintptr_t
 	add(volatile uintptr_t *address, uintptr_t addend)
 	{
-		/* Stop compiler optimizing away load of oldValue */
-		volatile uintptr_t *localAddr = address;
-		uintptr_t oldValue;
-
-		oldValue = (uintptr_t)*localAddr;
-		while ((lockCompareExchange(localAddr, oldValue, oldValue + addend)) != oldValue) {
-			oldValue = (uintptr_t)*localAddr;
-		}
-		return oldValue + addend;
+#if defined(OMR_ENV_DATA64)
+		return (uintptr_t)addU64((volatile uint64_t *)address, (uint64_t)addend);
+#else /* defined(OMR_ENV_DATA64) */
+		return (uintptr_t)addU32((volatile uint32_t *)address, (uint32_t)addend);
+#endif /* defined(OMR_ENV_DATA64) */
 	}
 
 	/**
@@ -600,6 +596,13 @@ public:
 	VMINLINE static uintptr_t
 	bitAnd(volatile uintptr_t *address, uintptr_t mask)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_fetch_and(address, mask, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_fetch_and_and(address, mask);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uintptr_t *localAddr = address;
 		uintptr_t oldValue;
@@ -609,6 +612,7 @@ public:
 			oldValue = (uintptr_t)*localAddr;
 		}
 		return oldValue;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	/**
@@ -624,6 +628,13 @@ public:
 	VMINLINE static uint32_t
 	bitAndU32(volatile uint32_t *address, uint32_t mask)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_fetch_and(address, mask, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_fetch_and_and(address, mask);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uint32_t *localAddr = address;
 		uint32_t oldValue;
@@ -633,6 +644,7 @@ public:
 			oldValue = (uint32_t)*localAddr;
 		}
 		return oldValue;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	/**
@@ -648,6 +660,13 @@ public:
 	VMINLINE static uintptr_t
 	bitOr(volatile uintptr_t *address, uintptr_t mask)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_fetch_or(address, mask, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_fetch_and_or(address, mask);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uintptr_t *localAddr = address;
 		uintptr_t oldValue;
@@ -657,6 +676,7 @@ public:
 			oldValue = (uintptr_t)*localAddr;
 		}
 		return oldValue;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	/**
@@ -672,6 +692,13 @@ public:
 	VMINLINE static uint32_t
 	bitOrU32(volatile uint32_t *address, uint32_t mask)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_fetch_or(address, mask, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_fetch_and_or(address, mask);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uint32_t *localAddr = address;
 		uint32_t oldValue;
@@ -681,6 +708,7 @@ public:
 			oldValue = (uint32_t)*localAddr;
 		}
 		return oldValue;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	/**
@@ -696,6 +724,13 @@ public:
 	VMINLINE static uintptr_t
 	addU32(volatile uint32_t *address, uint32_t addend)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_add_fetch(address, addend, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_add_and_fetch(address, addend);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uint32_t *localAddr = address;
 		uint32_t oldValue;
@@ -705,6 +740,7 @@ public:
 			oldValue = (uint32_t)*localAddr;
 		}
 		return oldValue + addend;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	/**
@@ -720,6 +756,13 @@ public:
 	VMINLINE static uint64_t
 	addU64(volatile uint64_t *address, uint64_t addend)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_add_fetch(address, addend, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_add_and_fetch(address, addend);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uint64_t *localAddr = address;
 		uint64_t oldValue;
@@ -729,6 +772,7 @@ public:
 			oldValue = (uint64_t)*localAddr;
 		}
 		return oldValue + addend;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	union DoubleConversionData {
@@ -782,15 +826,11 @@ public:
 	VMINLINE static uintptr_t
 	subtract(volatile uintptr_t *address, uintptr_t value)
 	{
-		/* Stop compiler optimizing away load of oldValue */
-		volatile uintptr_t *localAddr = address;
-		uintptr_t oldValue;
-
-		oldValue = (uintptr_t)*localAddr;
-		while ((lockCompareExchange(localAddr, oldValue, oldValue - value)) != oldValue) {
-			oldValue = (uintptr_t)*localAddr;
-		}
-		return oldValue - value;
+#if defined(OMR_ENV_DATA64)
+		return (uintptr_t)subtractU64((volatile uint64_t *)address, (uint64_t)value);
+#else /* defined(OMR_ENV_DATA64) */
+		return (uintptr_t)subtractU32((volatile uint32_t *)address, (uint32_t)value);
+#endif /* defined(OMR_ENV_DATA64) */
 	}
 
 	/**
@@ -806,6 +846,13 @@ public:
 	VMINLINE static uint64_t
 	subtractU64(volatile uint64_t *address, uint64_t value)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_sub_fetch(address, value, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_sub_and_fetch(address, value);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uint64_t *localAddr = address;
 		uint64_t oldValue;
@@ -815,6 +862,7 @@ public:
 			oldValue = (uint64_t)*localAddr;
 		}
 		return oldValue - value;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	/**
@@ -830,6 +878,13 @@ public:
 	VMINLINE static uintptr_t
 	subtractU32(volatile uint32_t *address, uint32_t value)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__)
+#if GCC_VERSION > 40800 /* GCC 4.8 or later */
+		return __atomic_sub_fetch(address, value, __ATOMIC_SEQ_CST);
+#else /* GCC_VERSION > 40800 */
+		return __sync_sub_and_fetch(address, value);
+#endif /* GCC_VERSION > 40800 */
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uint32_t *localAddr = address;
 		uint32_t oldValue;
@@ -839,6 +894,7 @@ public:
 			oldValue = (uint32_t)*localAddr;
 		}
 		return oldValue - value;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) */
 	}
 
 	/**
@@ -855,6 +911,12 @@ public:
 	VMINLINE static uintptr_t
 	set(volatile uintptr_t *address, uintptr_t value)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__) && GCC_VERSION > 40800 /* GCC 4.8 or later */
+		uintptr_t ret;
+		uintptr_t v = value;
+		__atomic_exchange(address, &v, &ret, __ATOMIC_SEQ_CST);
+		return ret;
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) && GCC_VERSION > 40800 */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uintptr_t *localAddr = address;
 		uintptr_t oldValue;
@@ -864,6 +926,7 @@ public:
 			oldValue = (uintptr_t)*localAddr;
 		}
 		return oldValue;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) && GCC_VERSION > 40800 */
 	}
 
 	/**
@@ -880,6 +943,12 @@ public:
 	VMINLINE static uint64_t
 	setU64(volatile uint64_t *address, uint64_t value)
 	{
+#if defined(OMR_ARCH_AARCH64) && defined(__GNUC__) && GCC_VERSION > 40800 /* GCC 4.8 or later */
+		uint64_t ret;
+		uint64_t v = value;
+		__atomic_exchange(address, &v, &ret, __ATOMIC_SEQ_CST);
+		return ret;
+#else /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) && GCC_VERSION > 40800 */
 		/* Stop compiler optimizing away load of oldValue */
 		volatile uint64_t *localAddr = address;
 		uint64_t oldValue;
@@ -889,6 +958,7 @@ public:
 			oldValue = (uint64_t)*localAddr;
 		}
 		return oldValue;
+#endif /* defined(OMR_ARCH_AARCH64) && defined(__GNUC__) && GCC_VERSION > 40800 */
 	}
 
 	/**
