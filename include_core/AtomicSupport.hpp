@@ -372,6 +372,57 @@ public:
 	 * Compare the unsigned 64 bit value at memory location pointed to by <b>address</b>.  If it is
 	 * equal to <b>oldValue</b> then update this memory location with <b>newValue</b>
 	 * else retain the <b>oldValue</b>.
+	 * It has acquire memory semantices.
+	 *
+	 * @param address The memory location to be updated
+	 * @param oldValue The expected value at memory address
+	 * @param newValue The new value to be stored at memory address
+	 * @param readBeforeCAS ignored
+	 *
+	 * @return the value at memory location <b>address</b> BEFORE the store was attempted
+	 */
+	VMINLINE static uint64_t
+	lockCompareExchangeU64Acquire(volatile uint64_t *address, uint64_t oldValue, uint64_t newValue, bool readBeforeCAS = false)
+	{
+#if defined(OMR_ARCH_AARCH64)
+	uint64_t expected = oldValue;
+	__atomic_compare_exchange_n(address, &expected, newValue, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
+	return expected;
+#else
+	return lockCompareExchangeU64(address, oldValue, newValue);
+#endif
+	}
+
+		/**
+	 * Store unsigned 64 bit value at memory location as an atomic operation.
+	 * Compare the unsigned 64 bit value at memory location pointed to by <b>address</b>.  If it is
+	 * equal to <b>oldValue</b> then update this memory location with <b>newValue</b>
+	 * else retain the <b>oldValue</b>.
+	 * It has release memory semantices.
+	 *
+	 * @param address The memory location to be updated
+	 * @param oldValue The expected value at memory address
+	 * @param newValue The new value to be stored at memory address
+	 * @param readBeforeCAS ignored
+	 *
+	 * @return the value at memory location <b>address</b> BEFORE the store was attempted
+	 */
+	VMINLINE static uint64_t
+	lockCompareExchangeU64Release(volatile uint64_t *address, uint64_t oldValue, uint64_t newValue, bool readBeforeCAS = false)
+	{
+#if defined(OMR_ARCH_AARCH64)
+	uint64_t expected = oldValue;
+	__atomic_compare_exchange_n(address, &expected, newValue, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
+	return expected;
+#else
+	return lockCompareExchangeU64(address, oldValue, newValue);
+#endif
+	}
+	/**
+	 * Store unsigned 64 bit value at memory location as an atomic operation.
+	 * Compare the unsigned 64 bit value at memory location pointed to by <b>address</b>.  If it is
+	 * equal to <b>oldValue</b> then update this memory location with <b>newValue</b>
+	 * else retain the <b>oldValue</b>.
 	 *
 	 * @param address The memory location to be updated
 	 * @param oldValue The expected value at memory address
@@ -439,6 +490,50 @@ public:
 #endif /* defined(ATOMIC_SUPPORT_STUB) */
 	}
 
+	/**
+	 * Store value at memory location as an atomic operation.
+	 * Compare the value at memory location pointed to by <b>address</b>.  If it is
+	 * equal to <b>oldValue</b> then update this memory location with <b>newValue</b>
+	 * else retain the <b>oldValue</b>.
+	 *
+	 * @param address The memory location to be updated
+	 * @param oldValue The expected value at memory address
+	 * @param newValue The new value to be stored at memory address
+	 * @param readBeforeCAS Controls whether a pre-read occurs before the CAS attempt (default false)
+	 *
+	 * @return the value at memory location <b>address</b> BEFORE the store was attempted
+	 */
+	VMINLINE static uintptr_t
+	lockCompareExchangeAcquire(volatile uintptr_t * address, uintptr_t oldValue, uintptr_t newValue, bool readBeforeCAS = false)
+	{
+#if defined(OMR_ENV_DATA64)
+		return (uintptr_t)lockCompareExchangeU64Acquire((volatile uint64_t *)address, (uint64_t)oldValue, (uint64_t)newValue, readBeforeCAS);
+#else /* defined(OMR_ENV_DATA64) */
+		return (uintptr_t)lockCompareExchangeU32((volatile uint32_t *)address, (uint32_t)oldValue, (uint32_t)newValue, readBeforeCAS);
+#endif /* defined(OMR_ENV_DATA64) */
+	}
+	/**
+	 * Store value at memory location as an atomic operation.
+	 * Compare the value at memory location pointed to by <b>address</b>.  If it is
+	 * equal to <b>oldValue</b> then update this memory location with <b>newValue</b>
+	 * else retain the <b>oldValue</b>.
+	 *
+	 * @param address The memory location to be updated
+	 * @param oldValue The expected value at memory address
+	 * @param newValue The new value to be stored at memory address
+	 * @param readBeforeCAS Controls whether a pre-read occurs before the CAS attempt (default false)
+	 *
+	 * @return the value at memory location <b>address</b> BEFORE the store was attempted
+	 */
+	VMINLINE static uintptr_t
+	lockCompareExchangeRelease(volatile uintptr_t * address, uintptr_t oldValue, uintptr_t newValue, bool readBeforeCAS = false)
+	{
+#if defined(OMR_ENV_DATA64)
+		return (uintptr_t)lockCompareExchangeU64Release((volatile uint64_t *)address, (uint64_t)oldValue, (uint64_t)newValue, readBeforeCAS);
+#else /* defined(OMR_ENV_DATA64) */
+		return (uintptr_t)lockCompareExchangeU32((volatile uint32_t *)address, (uint32_t)oldValue, (uint32_t)newValue, readBeforeCAS);
+#endif /* defined(OMR_ENV_DATA64) */
+	}
 	/**
 	 * Store value at memory location as an atomic operation.
 	 * Compare the value at memory location pointed to by <b>address</b>.  If it is
