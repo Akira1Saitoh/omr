@@ -2169,6 +2169,64 @@ TR::Instruction *loadAddressConstantInSnippet(TR::CodeGenerator *cg, TR::Node *n
    return generateTrg1ImmSymInstruction(cg, TR::InstOpCode::ldrx, node, targetRegister, 0, labelSym, cursor);
    }
 
+int32_t getNumInstructionsForLoadingConstant32(int32_t value)
+   {
+   if ((value >= 0 && value <= 65535) ||
+       (value >= -65535 && value < 0) ||
+       ((value & 0xFFFF) == 0) ||
+       ((value & 0xFFFF) == 0xFFFF))
+      {
+      return 1;
+      }
+   else
+      {
+      return 2;
+      }
+   }
+
+int32_t getNumInstructionsForLoadingConstant64(int64_t value)
+   {
+   if ((value == 0LL) || (~value == 0LL))
+      {
+      return 1;
+      }
+   else
+      {
+      uint16_t h[4];
+      int32_t count0000 = 0, countFFFF = 0;
+      int32_t use_movz;
+      int32_t i;
+
+      for (i = 0; i < 4; i++)
+         {
+         h[i] = (value >> (i * 16)) & 0xFFFF;
+         if (h[i] == 0)
+            {
+            count0000++;
+            }
+         else if (h[i] == 0xFFFF)
+            {
+            countFFFF++;
+            }
+         }
+      use_movz = (count0000 >= countFFFF);
+
+      int n = 0;
+      for (i = 0; i < 4; i++)
+         {
+         if (use_movz && (h[i] != 0))
+            {
+            n++;
+            }
+         else if (!use_movz && (h[i] != 0xFFFF))
+            {
+            n++;
+            }
+         }
+      return n;
+      }
+   }
+
 TR::Instruction *loadConstant32(TR::CodeGenerator *cg, TR::Node *node, int32_t value, TR::Register *trgReg, TR::Instruction *cursor)
    {
    TR::Instruction *insertingInstructions = cursor;
