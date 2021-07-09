@@ -47,6 +47,22 @@ namespace TR { class RegisterDependencyConditions; }
 namespace TR { class DebugCounterBase; }
 
 /**
+ * @brief Returns the number of instructions required for loading 32-bit integer value to a register
+ * @param[in] value : integer value
+ *
+ * @return the number of instructions required for loading 32-bit integer value to a register
+ */
+extern int32_t getNumInstructionsForLoadingConstant32(int32_t value);
+
+/**
+ * @brief Returns the number of instructions required for loading 64-bit integer value to a register
+ * @param[in] value : integer value
+ *
+ * @return the number of instructions required for loading 64-bit integer value to a register
+ */
+extern int32_t getNumInstructionsForLoadingConstant64(int64_t value);
+
+/**
  * @brief Generates instructions for loading 32-bit integer value to a register
  * @param[in] cg : CodeGenerator
  * @param[in] node : node
